@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthCheck — Fake News Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<div class="page">
+
+    <!-- Navbar -->
+    <nav>
+        <div class="nav-logo">
+            <i class="fa-solid fa-shield-halved"></i> TruthCheck
+        </div>
+        <div class="nav-center">
+            <a href="#analyzer"><i class="fa-solid fa-magnifying-glass"></i> Analyzer</a>
+            <a href="#how"><i class="fa-solid fa-gears"></i> How it works</a>
+            <a href="#about"><i class="fa-solid fa-circle-info"></i> About</a>
+        </div>
+        <div class="nav-badge">
+            <i class="fa-solid fa-circle status-dot"></i> Model Active
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="hero">
+        <div class="badge"><i class="fa-solid fa-robot"></i> AI · Machine Learning · NLP</div>
+        <h1>Fake News Detection with <span class="highlight">AI Intelligence</span></h1>
+        <p>Our advanced NLP model analyzes news articles and detects misinformation instantly with high accuracy.</p>
+        <div class="hero-btns">
+            <a href="#analyzer" class="hero-btn-primary"><i class="fa-solid fa-wand-magic-sparkles"></i> Try it now</a>
+            <a href="#how" class="hero-btn-secondary"><i class="fa-solid fa-play"></i> See how it works</a>
+        </div>
+
+        <div class="stats">
+            <div class="stat"><i class="fa-solid fa-newspaper"></i><div><strong>40K+</strong><span>Articles trained</span></div></div>
+            <div class="stat"><i class="fa-solid fa-brain"></i><div><strong>NLP</strong><span>TF-IDF model</span></div></div>
+            <div class="stat"><i class="fa-solid fa-bolt"></i><div><strong>Instant</strong><span>Analysis</span></div></div>
+            <div class="stat"><i class="fa-solid fa-lock"></i><div><strong>Private</strong><span>No data stored</span></div></div>
+        </div>
+    </div>
+
+    <!-- Analyzer Section -->
+    <div id="analyzer" class="section-label">
+        <i class="fa-solid fa-magnifying-glass-chart"></i> News Analyzer
+    </div>
+
+    <div class="main-grid">
+
+        <!-- LEFT -->
+        <div class="panel left-panel">
+            <div class="panel-header">
+                <div class="panel-icon blue"><i class="fa-solid fa-file-lines"></i></div>
+                <div>
+                    <h2>Paste Article</h2>
+                    <p>Enter news headline or full article</p>
+                </div>
+            </div>
+
+            <form action="/predict" method="POST" id="newsForm">
+                <div class="textarea-wrap">
+                    <textarea name="news" id="newsInput" rows="9"
+                        placeholder="Paste your news article or headline here...&#10;&#10;Example: Scientists have discovered a new treatment...">{{ news or '' }}</textarea>
+                    <div class="textarea-footer">
+                        <span id="wordCount">0 words</span>
+                        <span id="charCount">0 / 5000 chars</span>
+                    </div>
+                </div>
+
+                <!-- Sample buttons -->
+                <div class="sample-section">
+                    <p class="sample-label"><i class="fa-solid fa-flask"></i> Try sample articles:</p>
+                    <div class="sample-btns">
+                        <button type="button" class="sample-btn fake-sample" onclick="loadSample('fake')">
+                            <i class="fa-solid fa-circle-xmark"></i> Fake sample
+                        </button>
+                        <button type="button" class="sample-btn real-sample" onclick="loadSample('real')">
+                            <i class="fa-solid fa-circle-check"></i> Real sample
+                        </button>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn-analyze">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Analyze Now
+                    </button>
+                    <button type="button" class="btn-clear" onclick="clearText()">
+                        <i class="fa-solid fa-rotate-left"></i> Reset
+                    </button>
+                </div>
+            </form>
+
+            <div class="tips">
+                <p class="tips-title"><i class="fa-solid fa-lightbulb"></i> Tips for better results</p>
+                <ul>
+                    <li><i class="fa-solid fa-check"></i> Paste the full article for higher accuracy</li>
+                    <li><i class="fa-solid fa-check"></i> Works best with English news articles</li>
+                    <li><i class="fa-solid fa-check"></i> Include headline along with body text</li>
+                    <li><i class="fa-solid fa-check"></i> Always verify with BBC, Reuters, AP News</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="panel right-panel">
+            <div class="panel-header">
+                <div class="panel-icon purple"><i class="fa-solid fa-chart-pie"></i></div>
+                <div>
+                    <h2>Analysis Result</h2>
+                    <p>AI prediction appears here</p>
+                </div>
+            </div>
+
+            {% if result %}
+            <div class="result-area animate">
+
+                <div class="verdict {{ 'real' if result == 'REAL NEWS' else 'fake' }}">
+                    <div class="verdict-icon">
+                        {% if result == 'REAL NEWS' %}
+                            <i class="fa-solid fa-circle-check"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        {% endif %}
+                    </div>
+                    <div class="verdict-label">{{ result }}</div>
+                    <div class="verdict-sub">AI Confidence: <strong>{{ confidence }}%</strong></div>
+                    <div class="verdict-badge {{ 'badge-real' if result == 'REAL NEWS' else 'badge-fake' }}">
+                        {{ '✅ Likely Credible' if result == 'REAL NEWS' else '⚠️ Likely Misinformation' }}
+                    </div>
+                </div>
+
+                <!-- Confidence -->
+                <div class="conf-wrap">
+                    <div class="conf-label">
+                        <span><i class="fa-solid fa-gauge"></i> Confidence Score</span>
+                        <span class="{{ 'text-green' if result == 'REAL NEWS' else 'text-red' }}">{{ confidence }}%</span>
+                    </div>
+                    <div class="conf-bar">
+                        <div class="conf-fill {{ 'green' if result == 'REAL NEWS' else 'red' }}"
+                             style="width: {{ confidence }}%"></div>
+                    </div>
+                    <div class="conf-tags">
+                        <span class="conf-tag {{ 'active-tag' if confidence|float <= 50 else '' }}">Low</span>
+                        <span class="conf-tag {{ 'active-tag' if confidence|float > 50 and confidence|float <= 75 else '' }}">Medium</span>
+                        <span class="conf-tag {{ 'active-tag' if confidence|float > 75 else '' }}">High</span>
+                    </div>
+                </div>
+
+                <!-- Analysis breakdown -->
+                <div class="breakdown">
+                    <p class="breakdown-title"><i class="fa-solid fa-microscope"></i> Analysis Breakdown</p>
+                    <div class="breakdown-grid">
+                        <div class="b-item">
+                            <span class="b-label">Prediction</span>
+                            <span class="b-val {{ 'text-green' if result == 'REAL NEWS' else 'text-red' }}">{{ result }}</span>
+                        </div>
+                        <div class="b-item">
+                            <span class="b-label">Confidence</span>
+                            <span class="b-val">{{ confidence }}%</span>
+                        </div>
+                        <div class="b-item">
+                            <span class="b-label">Model</span>
+                            <span class="b-val">Logistic Regression</span>
+                        </div>
+                        <div class="b-item">
+                            <span class="b-label">Vectorizer</span>
+                            <span class="b-val">TF-IDF</span>
+                        </div>
+                        <div class="b-item">
+                            <span class="b-label">Features</span>
+                            <span class="b-val">5,000 max</span>
+                        </div>
+                        <div class="b-item">
+                            <span class="b-label">Method</span>
+                            <span class="b-val">NLP Classification</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trusted sources -->
+                <div class="sources">
+                    <p class="sources-title"><i class="fa-solid fa-link"></i> Verify with trusted sources</p>
+                    <div class="sources-grid">
+                        <a href="https://www.bbc.com/news" target="_blank" class="source-link">
+                            <i class="fa-solid fa-globe"></i> BBC News
+                        </a>
+                        <a href="https://www.reuters.com" target="_blank" class="source-link">
+                            <i class="fa-solid fa-globe"></i> Reuters
+                        </a>
+                        <a href="https://apnews.com" target="_blank" class="source-link">
+                            <i class="fa-solid fa-globe"></i> AP News
+                        </a>
+                        <a href="https://www.snopes.com" target="_blank" class="source-link">
+                            <i class="fa-solid fa-magnifying-glass"></i> Snopes
+                        </a>
+                    </div>
+                </div>
+
+                <div class="disclaimer">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    This is an AI prediction for educational purposes. Always verify news with trusted sources before sharing.
+                </div>
+
+            </div>
+
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fa-solid fa-newspaper"></i></div>
+                <h3>Ready to analyze</h3>
+                <p>Paste a news article on the left and click <strong>Analyze Now</strong> to detect if it's real or fake.</p>
+                <div class="feature-list">
+                    <div class="feature-item"><i class="fa-solid fa-check-circle text-green"></i> Real vs Fake detection</div>
+                    <div class="feature-item"><i class="fa-solid fa-check-circle text-green"></i> Confidence score</div>
+                    <div class="feature-item"><i class="fa-solid fa-check-circle text-green"></i> Analysis breakdown</div>
+                    <div class="feature-item"><i class="fa-solid fa-check-circle text-green"></i> Trusted source links</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- How it works -->
+    <div id="how" class="section-label">
+        <i class="fa-solid fa-gears"></i> How it works
+    </div>
+
+    <div class="how-section">
+        <div class="how-grid">
+            <div class="how-step">
+                <div class="how-num">1</div>
+                <div class="how-icon"><i class="fa-solid fa-paste"></i></div>
+                <h4>Paste Article</h4>
+                <p>Copy any news headline or full article into the text box</p>
+            </div>
+            <div class="how-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+            <div class="how-step">
+                <div class="how-num">2</div>
+                <div class="how-icon"><i class="fa-solid fa-broom"></i></div>
+                <h4>Text Cleaning</h4>
+                <p>NLP removes stopwords, punctuation and applies stemming</p>
+            </div>
+            <div class="how-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+            <div class="how-step">
+                <div class="how-num">3</div>
+                <div class="how-icon"><i class="fa-solid fa-table-cells"></i></div>
+                <h4>TF-IDF Vectorize</h4>
+                <p>Text converted to numerical feature vectors (5000 features)</p>
+            </div>
+            <div class="how-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+            <div class="how-step">
+                <div class="how-num">4</div>
+                <div class="how-icon"><i class="fa-solid fa-brain"></i></div>
+                <h4>ML Classification</h4>
+                <p>Logistic Regression model predicts real or fake</p>
+            </div>
+            <div class="how-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+            <div class="how-step">
+                <div class="how-num">5</div>
+                <div class="how-icon"><i class="fa-solid fa-flag-checkered"></i></div>
+                <h4>Result + Score</h4>
+                <p>Get verdict with confidence percentage instantly</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- About / Tech Stack -->
+    <div id="about" class="section-label">
+        <i class="fa-solid fa-layer-group"></i> Tech Stack
+    </div>
+
+    <div class="tech-grid">
+        <div class="tech-card">
+            <i class="fa-brands fa-python text-blue"></i>
+            <h4>Python</h4>
+            <p>Core programming language for ML and backend</p>
+        </div>
+        <div class="tech-card">
+            <i class="fa-solid fa-flask text-purple"></i>
+            <h4>Flask</h4>
+            <p>Lightweight web framework for the API and UI</p>
+        </div>
+        <div class="tech-card">
+            <i class="fa-solid fa-brain text-green"></i>
+            <h4>Scikit-learn</h4>
+            <p>ML library for training Logistic Regression model</p>
+        </div>
+        <div class="tech-card">
+            <i class="fa-solid fa-language text-yellow"></i>
+            <h4>NLTK</h4>
+            <p>Natural Language Toolkit for text preprocessing</p>
+        </div>
+        <div class="tech-card">
+            <i class="fa-solid fa-table text-red"></i>
+            <h4>Pandas</h4>
+            <p>Data manipulation and CSV dataset handling</p>
+        </div>
+        <div class="tech-card">
+            <i class="fa-solid fa-calculator text-purple"></i>
+            <h4>TF-IDF</h4>
+            <p>Text vectorization with 5000 feature extraction</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-top">
+            <div class="footer-brand">
+                <div class="footer-logo"><i class="fa-solid fa-shield-halved"></i> TruthCheck</div>
+                <p>AI-powered fake news detection system built for educational purposes using machine learning and NLP.</p>
+            </div>
+            <div class="footer-links">
+                <p class="footer-links-title">Quick Links</p>
+                <a href="#analyzer">Analyzer</a>
+                <a href="#how">How it works</a>
+                <a href="#about">Tech stack</a>
+            </div>
+            <div class="footer-links">
+                <p class="footer-links-title">Verify News</p>
+                <a href="https://www.bbc.com/news" target="_blank">BBC News</a>
+                <a href="https://www.reuters.com" target="_blank">Reuters</a>
+                <a href="https://apnews.com" target="_blank">AP News</a>
+                <a href="https://www.snopes.com" target="_blank">Snopes</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>Built with <i class="fa-brands fa-python"></i> Python · Flask · Scikit-learn · NLTK · TF-IDF</p>
+            <p class="footer-note">For educational purposes only · Not a substitute for professional fact-checking</p>
+        </div>
+    </footer>
+
+</div>
+
+<script>
+const textarea = document.getElementById('newsInput');
+const charCount = document.getElementById('charCount');
+const wordCount = document.getElementById('wordCount');
+
+function updateCounts() {
+    const text = textarea.value;
+    charCount.textContent = text.length + ' / 5000 chars';
+    const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+    wordCount.textContent = words + ' words';
+}
+
+if (textarea) {
+    textarea.addEventListener('input', updateCounts);
+    updateCounts();
+}
+
+function clearText() {
+    textarea.value = '';
+    updateCounts();
+}
+
+const fakeSample = "BREAKING: Scientists confirm that drinking bleach mixed with lemon juice completely cures cancer overnight. Government is hiding this miracle cure to protect pharmaceutical companies. Share this before they delete it! Anonymous doctor reveals the shocking truth the mainstream media doesn't want you to know.";
+
+const realSample = "The Federal Reserve held interest rates steady on Wednesday, as policymakers said they needed more evidence that inflation was cooling before cutting borrowing costs. The decision was unanimous among the members of the Federal Open Market Committee. Fed Chair Jerome Powell said the central bank remains committed to bringing inflation back to its 2% target.";
+
+function loadSample(type) {
+    textarea.value = type === 'fake' ? fakeSample : realSample;
+    updateCounts();
+}
+</script>
+
+</body>
+</html>
